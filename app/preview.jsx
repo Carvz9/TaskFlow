@@ -1,9 +1,65 @@
-import { Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function PreviewPage() {
+  const { photoUri } = useLocalSearchParams();
+
+  function handleAnalyze() {
+    console.log("Analyze pressed");
+    router.push("/result");
+  }
+
   return (
-    <View>
-      <Text>Preview Screen</Text>
+    <View style={styles.container}>
+      <Image source={{ uri: String(photoUri) }} style={styles.preview} />
+
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.retakeButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.buttonText}>Retake</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalyze}>
+          <Text style={styles.buttonText}>Analyze</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+
+  preview: {
+    flex: 1,
+    resizeMode: "contain",
+  },
+
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 20,
+  },
+
+  retakeButton: {
+    backgroundColor: "#5A6472",
+    padding: 14,
+    borderRadius: 8,
+  },
+
+  analyzeButton: {
+    backgroundColor: "#5B3FA3",
+    padding: 14,
+    borderRadius: 8,
+  },
+
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});

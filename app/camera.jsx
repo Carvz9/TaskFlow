@@ -1,4 +1,5 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { router } from "expo-router";
 import { useRef } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -13,7 +14,10 @@ export default function CameraPage() {
       quality: 0.7,
     });
 
-    console.log("Photo captured:", result.uri);
+    router.push({
+      pathname: "/preview",
+      params: { photoUri: result.uri },
+    });
   }
 
   if (!permission) {
