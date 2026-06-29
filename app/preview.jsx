@@ -15,7 +15,7 @@ export default function PreviewPage() {
   const { photoUri } = useLocalSearchParams();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  async function handleAnalyze() {
+  async function handleAnalyze(promptKey) {
     if (!photoUri || isAnalyzing) return;
 
     try {
@@ -26,7 +26,10 @@ export default function PreviewPage() {
 
       setLatestBase64Image(base64Image);
 
-      router.push("/result");
+      router.push({
+        pathname: "/result",
+        params: { promptKey },
+      });
     } catch (error) {
       console.log("Failed to convert image:", error);
       Alert.alert("Error", "Failed to prepare image for analysis.");
@@ -47,15 +50,33 @@ export default function PreviewPage() {
         >
           <Text style={styles.buttonText}>Retake</Text>
         </TouchableOpacity>
+      </View>
 
+      <View style={styles.personaColumn}>
         <TouchableOpacity
           style={[styles.analyzeButton, isAnalyzing && styles.disabledButton]}
-          onPress={handleAnalyze}
+          onPress={() => handleAnalyze("academic")}
           disabled={isAnalyzing}
         >
           <Text style={styles.buttonText}>
-            {isAnalyzing ? "Analyzing..." : "Analyze"}
+            {isAnalyzing ? "Analyzing..." : "Academic Analysis"}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.analyzeButton, isAnalyzing && styles.disabledButton]}
+          onPress={() => handleAnalyze("safety")}
+          disabled={isAnalyzing}
+        >
+          <Text style={styles.buttonText}>Safety Analysis</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.analyzeButton, isAnalyzing && styles.disabledButton]}
+          onPress={() => handleAnalyze("inventory")}
+          disabled={isAnalyzing}
+        >
+          <Text style={styles.buttonText}>Inventory Analysis</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -75,20 +96,29 @@ const styles = StyleSheet.create({
 
   actionRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 20,
+    justifyContent: "center",
+    padding: 10,
+  },
+
+  personaColumn: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 10,
   },
 
   retakeButton: {
     backgroundColor: "#5A6472",
     padding: 14,
     borderRadius: 8,
+    minWidth: 140,
+    alignItems: "center",
   },
 
   analyzeButton: {
     backgroundColor: "#5B3FA3",
     padding: 14,
     borderRadius: 8,
+    alignItems: "center",
   },
 
   disabledButton: {

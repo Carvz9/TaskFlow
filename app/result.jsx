@@ -1,6 +1,7 @@
 import { analyzeImage } from "@/lib/gemini";
 import { getLatestBase64Image } from "@/lib/imageStore";
-import { router } from "expo-router";
+import { PROMPTS } from "@/lib/prompts";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -11,23 +12,15 @@ import {
     View,
 } from "react-native";
 
-const ANALYSIS_PROMPT = `
-Analyze this image. Identify:
-1. Objects - list the distinct physical objects you see
-2. Context - briefly describe the setting or scene
-3. Activities - what activity appears to be happening, if any
-4. Recommendations - one practical suggestion based on the scene
-
-Respond ONLY with valid JSON in this exact shape, no extra text:
-{
-  "objects": ["...", "..."],
-  "context": "...",
-  "activities": "...",
-  "recommendations": "..."
-}
-`;
-
 export default function ResultPage() {
+  const { promptKey = "academic" } = useLocalSearchParams();
+
+  const selectedPromptKey = Array.isArray(promptKey)
+    ? promptKey[0]
+    : promptKey;
+
+  const selectedPrompt = PROMPTS[selectedPromptKey] || PROMPTS.academic;
+
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +40,7 @@ export default function ResultPage() {
         throw new Error("No image found. Please take another photo.");
       }
 
-      const result = await analyzeImage(base64Image, ANALYSIS_PROMPT);
+      const result = await analyzeImage(base64Image, selectedPrompt.text);
 
       const textPart = result?.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -58,21 +51,21 @@ export default function ResultPage() {
 
       console.log("Gemini text response:", textPart);
 
-const cleanText = textPart
-  .replace(/```json/g, "")
-  .replace(/```/g, "")
-  .trim();
+      const cleanText = textPart
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-console.log("Cleaned Gemini response:", cleanText);
+      console.log("Cleaned Gemini response:", cleanText);
 
-const parsedAnalysis = JSON.parse(cleanText);
-setAnalysis(parsedAnalysis);
+      const parsedAnalysis = JSON.parse(cleanText);
+      setAnalysis(parsedAnalysis);
     } catch (err) {
-  console.log("Analysis error:", err);
-  setError(err.message || "Could not analyze this image. Please try again.");
-} finally {
-  setLoading(false);
-}
+      console.log("Analysis error:", err);
+      setError(err.message || "Could not analyze this image. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (loading) {
@@ -89,7 +82,10 @@ setAnalysis(parsedAnalysis);
       <View style={styles.centered}>
         <Text style={styles.errorText}>{error}</Text>
 
-        <TouchableOpacity style={styles.button} onPress={() => router.push("/camera")}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/camera")}
+        >
           <Text style={styles.buttonText}>Take Another Photo</Text>
         </TouchableOpacity>
       </View>
@@ -98,7 +94,7 @@ setAnalysis(parsedAnalysis);
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>AI Image Analysis</Text>
+      <Text style={styles.title}>{selectedPrompt.title}</Text>
 
       <Text style={styles.sectionTitle}>Objects</Text>
       {analysis.objects.map((obj, index) => (
@@ -116,7 +112,10 @@ setAnalysis(parsedAnalysis);
       <Text style={styles.sectionTitle}>Recommendations</Text>
       <Text style={styles.bodyText}>{analysis.recommendations}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push("/camera")}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push("/camera")}
+      >
         <Text style={styles.buttonText}>Take Another Photo</Text>
       </TouchableOpacity>
     </ScrollView>
