@@ -1,4 +1,5 @@
 import { imageToBase64 } from "@/lib/gemini";
+import { setLatestBase64Image } from "@/lib/imageStore";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -21,15 +22,11 @@ export default function PreviewPage() {
       setIsAnalyzing(true);
 
       const base64Image = await imageToBase64(String(photoUri));
-
       console.log("Base64 image length:", base64Image.length);
 
-      router.push({
-        pathname: "/result",
-        params: {
-          photoUri: String(photoUri),
-        },
-      });
+      setLatestBase64Image(base64Image);
+
+      router.push("/result");
     } catch (error) {
       console.log("Failed to convert image:", error);
       Alert.alert("Error", "Failed to prepare image for analysis.");
@@ -52,10 +49,7 @@ export default function PreviewPage() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.analyzeButton,
-            isAnalyzing && styles.disabledButton,
-          ]}
+          style={[styles.analyzeButton, isAnalyzing && styles.disabledButton]}
           onPress={handleAnalyze}
           disabled={isAnalyzing}
         >
