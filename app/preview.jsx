@@ -1,12 +1,41 @@
+import { imageToBase64 } from "@/lib/gemini";
 import { router, useLocalSearchParams } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function PreviewPage() {
   const { photoUri } = useLocalSearchParams();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  function handleAnalyze() {
-    console.log("Analyze pressed");
-    router.push("/result");
+  async function handleAnalyze() {
+    if (!photoUri || isAnalyzing) return;
+
+    try {
+      setIsAnalyzing(true);
+
+      const base64Image = await imageToBase64(String(photoUri));
+
+      console.log("Base64 image length:", base64Image.length);
+
+      router.push({
+        pathname: "/result",
+        params: {
+          photoUri: String(photoUri),
+        },
+      });
+    } catch (error) {
+      console.log("Failed to convert image:", error);
+      Alert.alert("Error", "Failed to prepare image for analysis.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   return (
@@ -17,12 +46,22 @@ export default function PreviewPage() {
         <TouchableOpacity
           style={styles.retakeButton}
           onPress={() => router.back()}
+          disabled={isAnalyzing}
         >
           <Text style={styles.buttonText}>Retake</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalyze}>
-          <Text style={styles.buttonText}>Analyze</Text>
+        <TouchableOpacity
+          style={[
+            styles.analyzeButton,
+            isAnalyzing && styles.disabledButton,
+          ]}
+          onPress={handleAnalyze}
+          disabled={isAnalyzing}
+        >
+          <Text style={styles.buttonText}>
+            {isAnalyzing ? "Analyzing..." : "Analyze"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -56,6 +95,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#5B3FA3",
     padding: 14,
     borderRadius: 8,
+  },
+
+  disabledButton: {
+    opacity: 0.6,
   },
 
   buttonText: {
